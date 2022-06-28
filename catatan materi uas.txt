@@ -1,0 +1,152 @@
+connect ke orcl :
+sqlplus sys/orcl as sysdba
+
+atau
+ 
+sqlplus/nolog
+conn sys as sysdba;
+
+1. tablespace
+
+create tablespace TBSP_latihan
+  2  datafile 'tbslatihan.dbf'
+  3  size 5m
+  4  autoextend off
+  5  extent management local
+  6  segment space management auto
+  7  nologging
+  8  permanent
+  9  autoallocate;
+
+2. profile
+
+create profile profile_latihan limit
+  2  cpu_per_session 10000
+  3  sessions_per_user 2
+  4  connect_time 480
+  5  idle_time 500
+  6  password_life_time 60
+  7  password_grace_time 10
+  8  password_reuse_time 1800
+  9  password_reuse_max unlimited
+ 10  failed_login_attempts 3
+ 11  password_lock_time 1/1440
+ 12  ;
+
+3. user
+
+create user latihan
+  2  identified by "latihan"
+  3  default tablespace TBSP_latihan
+  4  temporary tablespace temp
+  5  quota 10m on TBSP_latihan
+  6  profile default;
+
+create user latihan2
+  2  identified by "latihan2"
+  3  default tablespace TBSP_latihan
+  4  temporary tablespace temp
+  5  quota 10m on TBSP_latihan
+  6  profile profile_latihan
+
+4. Role
+
+create role hrclerklatihan;
+
+Role created.
+
+SQL> grant select,update
+  2  on hr.employees
+  3  to hrclerklatihan;
+
+Grant succeeded.
+
+SQL> create role hrmanagerlatihan;
+
+Role created.
+
+SQL> grant insert,delete
+  2  on hr.employees
+  3  to hrmanagerlatihan;
+
+Grant succeeded.
+
+SQL> grant hrclerklatihan to hrmanagerlatihan;
+
+Grant succeeded.
+
+SQL> grant hrclerklatihan to latihan;
+
+Grant succeeded.
+
+SQL> grant hrmanagerlatihan to latihan2;
+
+Grant succeeded.
+
+
+5. privelege
+
+grant create session, create table, insert any table
+  2  to latihan,latihan2;
+
+Grant succeeded.
+
+SQL> grant select,update
+  2  on hr.employees
+  3  to latihan,latihan2;
+
+Grant succeeded.
+
+SQL> grant select,update
+  2  on hr.regions
+  3  to latihan,latihan2;
+
+Grant succeeded.
+
+6. praktek user
+
+conn latihan/latihan;
+Connected.
+SQL> select employee_id
+  2  from hr.employees;
+
+conn latihan2/latihan2;
+Connected.
+SQL> delete hr.employees
+  2  where employee_id='109';
+
+1 row deleted.
+
+SQL> rollback;
+
+Rollback complete.
+
+
+7. copy table
+create table karyawan as select *from hr.employees;
+8. mengisi table 
+conn latihan/latihan
+Connected.
+SQL> create table mahasiswalatihan(
+  2  npm char(8) not null,
+  3  nama varchar (30) not null,
+  4  primary key(npm));
+insert into mahasiswalatihan
+  2  values
+  3  ('111','yui');
+
+1 row created.
+
+SQL> insert into mahasiswalatihan
+  2  values
+  3  ('222','yuio');
+
+1 row created.
+
+SQL> insert into mahasiswalatihan
+  2  values
+  3  ('333','yuyu');
+
+1 row created.
+
+9. mencoba lock conflik
